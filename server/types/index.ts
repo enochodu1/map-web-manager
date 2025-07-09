@@ -1,34 +1,111 @@
-import { MCPServer, MCPFolder, MCPLog, MCPSettings, MCPServerTemplate, MCPHealthCheck, MCPServerStats } from '../../client/types';
+// Re-export client types
+export type {
+  MCPServer,
+  MCPFolder,
+  MCPLog,
+  MCPSettings,
+  MCPServerTemplate,
+  MCPHealthCheck,
+  MCPServerStats
+} from '../../client/types';
+
+// Additional server-specific types
+export interface MCPServerStatus {
+  serverId: string;
+  status: string;
+  pid?: number;
+  uptime?: number;
+  restarts?: number;
+  lastRestart?: Date;
+}
+
+export type MCPServerConfig = {
+  command: string;
+  env: Record<string, string>;
+  port?: number;
+  workingDirectory?: string;
+  args?: string[];
+};
+
+export type MCPTemplate = MCPServerTemplate;
 
 // Database Models
-export interface ServerModel extends Omit<MCPServer, 'env'> {
+export interface ServerModel {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  command: string;
+  port?: number;
+  status: string;
+  folderId?: string;
+  createdAt: string;
+  updatedAt: string;
   env: string; // JSON string
 }
 
-export interface FolderModel extends Omit<MCPFolder, 'children'> {}
+export interface FolderModel {
+  id: string;
+  name: string;
+  parentId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface LogModel extends MCPLog {
+export interface LogModel {
+  id: string;
+  serverId: string;
+  level: string;
+  message: string;
+  timestamp: string;
   metadata: string; // JSON string
 }
 
-export interface SettingsModel extends MCPSettings {}
-
-export interface TemplateModel extends Omit<MCPServerTemplate, 'defaultEnv' | 'configSchema'> {
-  defaultEnv: string; // JSON string
-  configSchema: string; // JSON string
+export interface SettingsModel {
+  id: string;
+  key: string;
+  value: string;
+  updatedAt: string;
 }
 
-export interface HealthCheckModel extends Omit<MCPHealthCheck, 'details'> {
+export interface TemplateModel {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  command: string;
+  defaultEnv: string; // JSON string
+  configSchema: string; // JSON string
+  tags: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HealthCheckModel {
+  id: string;
+  serverId: string;
+  status: string;
+  responseTime?: number;
+  timestamp: string;
   details: string; // JSON string
 }
 
-export interface ServerStatsModel extends MCPServerStats {}
+export interface ServerStatsModel {
+  id: string;
+  serverId: string;
+  cpuUsage: number;
+  memoryUsage: number;
+  uptime: number;
+  requestCount: number;
+  errorCount: number;
+  timestamp: string;
+}
 
 // Service Types
 export interface ServerProcess {
   id: string;
   process: any; // NodeJS.Process
-  status: MCPServer['status'];
+  status: string;
   startTime: number;
   logs: string[];
 }
@@ -59,23 +136,23 @@ export interface LogConfig {
 // WebSocket Events
 export interface ServerStatusEvent {
   serverId: string;
-  status: MCPServer['status'];
+  status: string;
   timestamp: string;
 }
 
 export interface ServerLogEvent {
   serverId: string;
-  log: MCPLog;
+  log: LogModel;
 }
 
 export interface HealthCheckEvent {
   serverId: string;
-  health: MCPHealthCheck;
+  health: HealthCheckModel;
 }
 
 export interface ServerStatsEvent {
   serverId: string;
-  stats: MCPServerStats;
+  stats: ServerStatsModel;
 }
 
 // API Request/Response Types

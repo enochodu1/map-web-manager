@@ -36,6 +36,10 @@ export class HealthService {
     }
   }
 
+  public async startPeriodicHealthChecks(): Promise<void> {
+    return this.startHealthChecks();
+  }
+
   public async stopHealthChecks(): Promise<void> {
     this.healthChecks.forEach(timeout => clearTimeout(timeout));
     this.healthChecks.clear();
@@ -99,7 +103,7 @@ export class HealthService {
           status: 'unhealthy',
           lastCheck: new Date().toISOString(),
           details: {
-            error: error.message
+            error: (error as Error).message
           }
         };
       }

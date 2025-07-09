@@ -135,12 +135,89 @@ export default class Database {
   }
 
   // Server operations
+  public async createServer(server: Omit<MCPServer, 'id' | 'createdAt' | 'updatedAt'>): Promise<MCPServer> {
+    const id = `server_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
+    
+    const newServer: MCPServer = {
+      ...server,
+      id,
+      status: 'inactive',
+      createdAt: now,
+      updatedAt: now
+    };
+
+    await this.db!.run(
+      `INSERT INTO servers (id, name, description, type, status, command, port, folderId, env, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        newServer.id,
+        newServer.name,
+        newServer.description || null,
+        newServer.type,
+        newServer.status,
+        newServer.command,
+        newServer.port || null,
+        newServer.folderId || null,
+        JSON.stringify(newServer.env || {}),
+        newServer.createdAt,
+        newServer.updatedAt
+      ]
+    );
+
+    return newServer;
+  }
+
+  public async updateServer(id: string, updates: Partial<MCPServer>): Promise<MCPServer | null> {
+    const existingServer = await this.getServer(id);
+    if (!existingServer) return null;
+
+    const updatedServer = {
+      ...existingServer,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.db!.run(
+      `UPDATE servers SET 
+        name = ?, description = ?, type = ?, status = ?, command = ?, 
+        port = ?, folderId = ?, env = ?, updatedAt = ?
+       WHERE id = ?`,
+      [
+        updatedServer.name,
+        updatedServer.description || null,
+        updatedServer.type,
+        updatedServer.status,
+        updatedServer.command,
+        updatedServer.port || null,
+        updatedServer.folderId || null,
+        JSON.stringify(updatedServer.env || {}),
+        updatedServer.updatedAt,
+        id
+      ]
+    );
+
+    return updatedServer;
+  }
+
   public async saveServer(server: MCPServer): Promise<void> {
     const { id, env, ...rest } = server;
     await this.db!.run(
-      `INSERT OR REPLACE INTO servers (id, env, createdAt, updatedAt, ...) 
-       VALUES (?, ?, ?, ?, ...)`,
-      [id, JSON.stringify(env), new Date().toISOString(), new Date().toISOString(), ...Object.values(rest)]
+      `INSERT OR REPLACE INTO servers (id, name, description, type, status, command, port, folderId, env, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        server.name,
+        server.description || null,
+        server.type,
+        server.status,
+        server.command,
+        server.port || null,
+        server.folderId || null,
+        JSON.stringify(env || {}),
+        server.createdAt,
+        server.updatedAt
+      ]
     );
   }
 

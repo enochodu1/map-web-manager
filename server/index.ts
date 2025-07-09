@@ -17,7 +17,6 @@ import { LogService } from './services/log-service';
 import { WebSocketService } from './services/websocket-service';
 import { errorHandler } from './middleware/error-handler';
 import { requestLogger } from './middleware/request-logger';
-import { authMiddleware } from './middleware/auth';
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -52,11 +51,11 @@ class MCPWebManager {
   private server: any;
   private io: SocketIOServer;
   private database: Database;
-  private mcpService: MCPService;
-  private healthService: HealthService;
-  private configService: ConfigService;
-  private logService: LogService;
-  private webSocketService: WebSocketService;
+  private mcpService!: MCPService;
+  private healthService!: HealthService;
+  private configService!: ConfigService;
+  private logService!: LogService;
+  private webSocketService!: WebSocketService;
 
   constructor() {
     this.app = express();
@@ -198,32 +197,33 @@ class MCPWebManager {
     this.server.close(() => {
       logger.info('HTTP server closed');
       
-      this.database.close().then(() => {
-        logger.info('Database connection closed');
-        process.exit(0);
-      });
+      // Close database connection
+      this.database.close();
+      
+      // Stop all MCP services
+      this.mcpService.stopAllServers();
+      
+      process.exit(0);
     });
-
-    // Force close after 10 seconds
-    setTimeout(() => {
-      logger.error('Could not close connections in time, forcefully shutting down');
-      process.exit(1);
-    }, 10000);
   }
 
   public async start() {
-    const port = process.env.PORT || 3001;
-    
     try {
-      // Start health monitoring
-      await this.healthService.startHealthChecks();
+      // Initialize database
+      await this.database.initialize();
       
       // Start the server
+      const port = parseInt(process.env.PORT || '3001', 10);
       this.server.listen(port, () => {
-        logger.info(`MCP Web Manager server running on port ${port}`);
-        logger.info(`WebSocket server running on port ${port}`);
+        logger.info(`MCP Web Manager server started on port ${port}`);
         logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        logger.info(`Client URL: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
       });
+
+      // Start health checks
+      await this.healthService.startPeriodicHealthChecks();
+      
+      logger.info('MCP Web Manager fully initialized');
     } catch (error) {
       logger.error('Failed to start server:', error);
       process.exit(1);
@@ -231,11 +231,9 @@ class MCPWebManager {
   }
 }
 
-// Create and start the server
-const server = new MCPWebManager();
-server.start().catch((error) => {
-  console.error('Failed to start MCP Web Manager:', error);
+// Start the application
+const app = new MCPWebManager();
+app.start().catch((error) => {
+  console.error('Failed to start application:', error);
   process.exit(1);
 });
-
-export default MCPWebManager;

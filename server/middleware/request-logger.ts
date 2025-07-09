@@ -16,7 +16,7 @@ export function requestLogger(logger: Logger) {
 
     // Override res.end to log the response
     const originalEnd = res.end;
-    res.end = function(chunk: any, encoding?: any) {
+    res.end = function(chunk?: any, encoding?: BufferEncoding) {
       const duration = Date.now() - startTime;
       
       logger.info('Request completed', {
@@ -27,7 +27,7 @@ export function requestLogger(logger: Logger) {
         timestamp: new Date().toISOString()
       });
       
-      originalEnd.call(this, chunk, encoding);
+      return originalEnd.call(this, chunk, encoding);
     };
 
     next();

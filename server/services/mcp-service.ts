@@ -1,12 +1,12 @@
-import { spawn, ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
+import { Logger } from 'winston';
+import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs-extra';
 import { v4 as uuidv4 } from 'uuid';
-import { Logger } from 'winston';
 
 import Database from '../database';
-import { MCPServer, MCPServerConfig, MCPServerStatus, MCPTemplate } from '../types';
+import { MCPServer, MCPServerConfig, MCPServerStatus, MCPTemplate, MCPServerTemplate } from '../types';
 
 export class MCPService extends EventEmitter {
   private database: Database;
@@ -103,17 +103,10 @@ export class MCPService extends EventEmitter {
       this.logger.info(`Starting MCP server: ${server.name} (${id})`);
       
       // Update status to starting
-      await this.updateServerStatus(id, 'installing');
+      await this.updateServerStatus(id, 'starting');
       
-      let childProcess: ChildProcess;
-      
-      if (server.config.transport === 'stdio') {
-        childProcess = await this.startStdioServer(server);
-      } else if (server.config.transport === 'sse') {
-        childProcess = await this.startSSEServer(server);
-      } else {
-        throw new Error(`Unsupported transport type: ${server.config.transport}`);
-      }
+      // Start the server process
+      const childProcess = await this.startServerProcess(server);
 
       this.runningServers.set(id, childProcess);
       await this.updateServerStatus(id, 'active');
@@ -195,7 +188,7 @@ export class MCPService extends EventEmitter {
   }
 
   // Server Status
-  async updateServerStatus(id: string, status: MCPServer['status']): Promise<void> {
+  async updateServerStatus(id: string, status: string): Promise<void> {
     await this.database.updateServer(id, { status });
     
     const serverStatus: MCPServerStatus = {
@@ -217,6 +210,33 @@ export class MCPService extends EventEmitter {
 
   getAllServerStatuses(): MCPServerStatus[] {
     return Array.from(this.serverStatuses.values());
+  }
+
+  // Process management
+  private async startServerProcess(server: MCPServer): Promise<ChildProcess> {
+    const args = server.command.split(' ');
+    const command = args.shift();
+    
+    if (!command) {
+      throw new Error('Invalid command');
+    }
+
+    const childProcess = spawn(command, args, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, ...server.env },
+      cwd: process.cwd()
+    });
+
+    this.setupProcessHandlers(childProcess, server);
+    return childProcess;
+  }
+
+  // Stop all servers
+  stopAllServers(): void {
+    this.runningServers.forEach((process, id) => {
+      process.kill('SIGTERM');
+    });
+    this.runningServers.clear();
   }
 
   // Transport-specific server starters
