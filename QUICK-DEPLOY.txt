@@ -1,0 +1,37 @@
+🚀 COOLIFY QUICK DEPLOY - COPY & PASTE THIS
+============================================
+
+✅ Repository Ready: enochodu1/map-web-manager
+✅ Code Pushed: Latest version on GitHub
+✅ Docker Optimized: Ready for Coolify
+
+📋 COPY THESE EXACT VALUES INTO COOLIFY:
+========================================
+
+Repository Name: enochodu1/map-web-manager
+Branch: main
+Build Method: Docker
+Internal Port: 3001
+
+Environment Variables (copy all 4):
+NODE_ENV=production
+PORT=3001
+CLIENT_URL=https://your-assigned-domain.com
+DB_PATH=/app/data/database.sqlite
+
+⚡ 3-MINUTE DEPLOYMENT PROCESS:
+==============================
+1. Coolify Dashboard → "+" → Application → GitHub
+2. Select: enochodu1/map-web-manager
+3. Paste the values above
+4. Click Deploy
+5. Wait 2-5 minutes
+
+🎯 AFTER DEPLOYMENT:
+===================
+1. Copy your assigned Coolify domain
+2. Update CLIENT_URL with that domain
+3. Redeploy once more
+4. Test your app!
+
+That's it! 🎉 
