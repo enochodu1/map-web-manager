@@ -38,13 +38,13 @@ RUN npm install --production
 # Create data directory
 RUN mkdir -p /app/data
 
-# Set environment variables
+# Set environment variables with defaults
 ENV NODE_ENV=production
-ENV PORT=3001
-ENV CLIENT_URL=http://localhost:3003
+ENV PORT=${PORT:-3001}
+ENV CLIENT_URL=${CLIENT_URL:-http://localhost:3003}
 
 # Expose ports
-EXPOSE 3001 3003
+EXPOSE ${PORT:-3001} 3003
 
 # Copy start script
 COPY docker-entrypoint.sh /app/
