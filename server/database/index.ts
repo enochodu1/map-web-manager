@@ -232,8 +232,9 @@ export default class Database {
     return servers.map(this.mapServerModel);
   }
 
-  public async deleteServer(id: string): Promise<void> {
-    await this.db!.run('DELETE FROM servers WHERE id = ?', id);
+  public async deleteServer(id: string): Promise<boolean> {
+    const result = await this.db!.run('DELETE FROM servers WHERE id = ?', id);
+    return result.changes > 0;
   }
 
   // Folder operations

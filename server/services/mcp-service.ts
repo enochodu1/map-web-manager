@@ -360,8 +360,8 @@ export class MCPService extends EventEmitter {
 
     // Validate environment variables
     if (config.validation?.required) {
-      const missing = config.validation.required.filter(key => 
-        !config.env?.[key] && !server.environmentVariables?.[key]
+      const missing = config.validation.required.filter((key: string) => 
+        !config.env?.[key] && !server.env?.[key]
       );
       
       if (missing.length > 0) {

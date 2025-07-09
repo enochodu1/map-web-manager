@@ -116,7 +116,8 @@ class MCPWebManager {
     // Rate limiting
     this.app.use(async (req, res, next) => {
       try {
-        await rateLimiter.consume(req.ip);
+        const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+        await rateLimiter.consume(clientIP);
         next();
       } catch (rejRes) {
         res.status(429).json({
