@@ -6,14 +6,22 @@
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run install:all && npm run build:client",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && tsc",
-    "start": "cd server && npm start",
-    "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+    "start": "cd client && npm start",
+    "install:all": "cd client && npm install && cd ../server && npm install"
+  },
+  "dependencies": {
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18"
   }
 }
